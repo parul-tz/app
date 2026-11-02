@@ -29,7 +29,7 @@
   P('Trav_Detail', { title: 'Traveler Details', back: 'Trav_List', right: { t: 'icon', icon: 'more', to: 'Trav_DetailSheet' }, blocks: [TDHEAD(),
     B([{ t: 'dark', title: 'Support this Traveler’s Trip', text: 'Share a donation link to collect contributions', btn: ['Share Donation Link', null, 'Donation link copied'] }]),
     G('Payment Summary', [KV('Total Trip Cost', '$222.00'), KV('Paid Amount', '$0.00'), KV('Balance Due', '$222.00')]),
-    G('Payment Schedule', [INSTR('1st Installment', '15-Jun-26', '$55.00'), INSTR('2nd Installment', '23-Aug-26', '$55.00'), INSTR('3rd Installment', '25-Aug-26', '$55.00'), INSTR('4th Installment', '29-Sep-26', '$57.00'), BT([['Send payment link', 'primary', null, null, 'Payment link sent to megansims2012@yopmail.com']], { full: true }), LK('Payment Schedule', 'receipt', 'Trav_PaySchedule')]),
+    G('Payment Schedule', [INSTR('1st Installment', '15-Jun-26', '$55.00'), INSTR('2nd Installment', '23-Aug-26', '$55.00'), INSTR('3rd Installment', '25-Aug-26', '$55.00'), INSTR('4th Installment', '29-Sep-26', '$57.00'), BT([['Make Payment', 'primary', null, 'Trav_Pay']], { full: true }), LK('Payment Schedule', 'receipt', 'Trav_PaySchedule')]),
     KVG('Account Holder Details', [['Name', 'Boggess, Megan'], ['Email Address', 'megansims2012@yopmail.com'], ['Phone Number', '+1 216-408-4879'], ['Address', '1420 Lakeview Ave, Cleveland, OH']]),
     KVG('Traveler Details', [['Traveler First Name', 'Mia'], ['Traveler Middle Name', '-'], ['Traveler Last Name', 'Johnson'], ['Email Address', '-'], ['Phone Number', '+1 999-999-9999'], ['Date of Birth', '10/07/2012'], ['Address', '1420 Lakeview Ave, Cleveland, OH'], ['Traveler Type', 'Student'], ['Traveler Gender', 'Female']]),
     B([HD('Tasks'), MU('1 of 3 completed')]),
@@ -67,9 +67,29 @@
   P('Trav_EditEmergency', LIKE('Trav_Detail', { ov: SHEET('Emergency Information', [F('Contact Name', '', { ph: 'Full name', req: true }), F('Relationship', 'Parent', { kind: 'select', req: true }), F('Phone Number', '', { ph: 'Enter phone number', icon: 'phone', req: true })], [CANCEL(), ['Save', 'primary', null, '^', 'Emergency information saved']]) }));
   function PAYROW(n, dt, st, amt) { return H({ title: n, sub: dt, tw: 500, chips: [[st, st === 'Paid' ? 'active' : 'draft']], rightText: amt, rowH: 48 }); }
   function TXN(dt, by, msg) { return H({ lead: { icon: 'clock', color: '#717784' }, title: msg, sub: dt + ' · by ' + by, tw: 400, align: 'flex-start' }); }
-  P('Trav_Payments', { title: 'Payment Schedule', back: 'Trav_Detail', blocks: [B([{ t: 'tripsub', text: 'Johnson, Mia · ' + TRIP }, NT('Payments are view only on mobile. Refunds and chargebacks are recorded in the web app.', 'info', 'info')]),
+  P('Trav_Payments', { title: 'Payment Schedule', back: 'Trav_Detail', blocks: [B([{ t: 'tripsub', text: 'Johnson, Mia · ' + TRIP }, NT('Refunds and chargebacks are recorded in the web app.', 'info', 'info')]),
     G('Payment Schedule', [PAYROW('Booking Amount', 'Apr 18', 'Paid', '$10.00'), DV, PAYROW('First Installment', 'May 2', 'Due', '$60.00'), DV, PAYROW('Second Installment', 'May 3', 'Due', '$60.00')]),
     G('Transaction History', [TXN('04/18/2025 · 10:12 AM', 'mark, cooper', 'Booking amount paid by card · $10.00'), DV, TXN('04/18/2025 · 10:10 AM', 'mark, cooper', 'Traveler registered')])] });
+
+  // Make payment (admin records a traveler payment)
+  var PAYSUB = B([{ t: 'tripsub', text: 'Johnson, Mia · Boggess, Megan' }]);
+  var PSEG = function (a) { return SG([['Card', 'Trav_Pay_Card'], ['Bank', 'Trav_Pay_Bank'], ['Check', 'Trav_Pay_Check'], ['Cash', 'Trav_Pay_Cash'], ['Fundraising', 'Trav_Pay_Fund']], a); };
+  var PCOST = function (fee) { return G('Complete Payment', [KV('Total Cost', '$55.00'), KV('Technology Fee', fee)]); };
+  var QB = NT('QuickBooks Sync Aware · This transaction will sync automatically to QuickBooks.', 'ok', 'history');
+  var BILL = G('Billing Address', [HF('First Name', '', { ph: 'First Name' }), HF('Last Name', '', { ph: 'Last Name' }), F('Street address', '', { ph: 'Street address' }), HF('City', '', { ph: 'City' }), HF('State', '', { ph: 'State' }), F('Zipcode', '', { ph: 'Zipcode' })]);
+  P('Trav_Pay', { title: 'Make Payment', back: 'Trav_Detail', footer: [['Pay Now', 'primary', null, 'Trav_Pay_Card']], blocks: [
+    C([H({ lead: { img: COVER }, title: TRIP, sub: 'Washington D.C., DC, USA', body: '11/06/2026 – 11/08/2026', align: 'flex-start' })], { pad: 12 }),
+    G('Travelers (1)', [SB('', 'Search for account holder…'), CK('Johnson, Mia', true, 'Boggess, Megan · Trip Cost $222.00 · Balance Due $222.00 · Amount $55.00')]),
+    G('Payment Options', [RD('Due Installment', true, '$55.00'), RD('Due Total', false, '$222.00'), RD('Custom Amount', false, 'Enter an amount'), F('Custom Amount', '', { icon: 'dollar', ph: '0.00' })]),
+    B([LK('Share Payment Link', 'link', null, { toast: 'Payment link copied' })])] });
+  P('Trav_Pay_Card', { title: 'Complete Payment', back: 'Trav_Pay', footer: [['Pay', 'primary', null, 'Trav_Pay_Success']], blocks: [PAYSUB, PCOST('$1.65'), B([PSEG('Card')]), G('Card Details', [F('Card Number', '', { ph: '0000 0000 0000 0000' }), HF('Expiry', '', { ph: 'MM/YY' }), HF('CVV', '', { ph: '123' })]), BILL] });
+  P('Trav_Pay_Bank', { title: 'Complete Payment', back: 'Trav_Pay', footer: [['Pay', 'primary', null, 'Trav_Pay_Success']], blocks: [PAYSUB, PCOST('$2.00'), B([PSEG('Bank')]), G('Bank Details', [F('Account Number', '', { ph: 'Account Number' }), F('ABA Routing Number', '', { ph: 'ABA Routing Number' }), F('Account Holder Name', '', { ph: 'Account Holder Name' })]), BILL] });
+  P('Trav_Pay_Check', { title: 'Complete Payment', back: 'Trav_Pay', footer: [['Submit Payment', 'primary', null, 'Trav_Pay_Success']], blocks: [PAYSUB, PCOST('$0.00'), B([PSEG('Check')]), G(null, [F('Account Holder Name', '', { ph: 'Enter account holder name', req: true }), F('Check Number', '', { ph: 'Enter check number', req: true }), F('Check Date', '', { kind: 'date', ph: 'Select check date', req: true })]), B([QB])] });
+  P('Trav_Pay_Cash', { title: 'Complete Payment', back: 'Trav_Pay', footer: [['Confirm Payment', 'primary', null, 'Trav_Pay_Success']], blocks: [PAYSUB, PCOST('$0.00'), B([PSEG('Cash'), NT('Confirm you have received the full amount in cash before confirming.', 'warn', 'info'), QB])] });
+  P('Trav_Pay_Fund', { title: 'Complete Payment', back: 'Trav_Pay', footer: [['Confirm Payment', 'primary', null, 'Trav_Pay_Success']], blocks: [PAYSUB, PCOST('$0.00'), B([PSEG('Fundraising'), NT('Confirm you have received the full fundraising or scholarship amount before confirming.', 'warn', 'info')]), G('Payment Source', [RD('Fundraising', true), RD('Scholarship', false)])] });
+  P('Trav_Pay_Success', { title: 'Payment', back: 'Trav_Detail', footer: [['Go to Traveler List', 'primary', null, 'Trav_List']], blocks: [B([EM('check', 'Payment successful', 'The total amount paid is $55.00. A confirmation email has been sent to the account holder.')]),
+    G('Transaction ID', [H({ title: '65b59552-0298-4859-96e5-f0b1638a2426', tw: 500, icons: [{ icon: 'copy', toast: 'Transaction ID copied' }] })]),
+    B([BT([['Back to traveler', 'secondary', null, 'Trav_Detail']], { full: true })])] });
   function TNOTE(a, dt, t) { return C([H({ lead: { av: a }, title: a, sub: dt, tw: 500, icons: [{ icon: 'edit', to: 'Trav_NoteAdd' }, { icon: 'trash', to: 'Trav_NoteDelete' }] }), TX(t)], { gap: 10 }); }
   P('Trav_Notes', { title: 'Notes', back: 'Trav_Detail', fab: ['Add Note', 'Trav_NoteAdd'], blocks: [B([{ t: 'tripsub', text: 'Johnson, Mia' }]), TNOTE('Mark Loop', '12/03/2025 · 10:45 AM', 'Prefers a lower bunk. Parent will confirm medication list.')] });
   P('Trav_NotesEmpty', { title: 'Notes', back: 'Trav_Detail', blocks: [B([{ t: 'tripsub', text: 'Johnson, Mia' }, EM('note', 'No notes yet', 'Currently there are no notes available', 'Add Note', 'Trav_NoteAdd')])] });
@@ -80,5 +100,5 @@
   P('Trav_Decline', LIKE('Trav_Request', { ov: DLG('Decline this request?', 'Patel, Riya stays Active. The account holder is notified.', [CANCEL(), ['Decline', 'danger', null, 'Trav_List', 'Request declined']], 'warn', [F('Reason', '', { kind: 'textarea', ph: 'Add a reason for the account holder', req: true })]) }));
 
 
-  TM.TRAV = TRAV; TM.FL = FL; TM.PAYC = PAYC; TM.FSEC = FSEC; TM.TASK = TASK; TM.INSTR = INSTR; TM.BROW = BROW; TM.TFORM = TFORM; TM.MSEL = MSEL; TM.RFORM = RFORM; TM.PSROW = PSROW; TM.PAYROW = PAYROW; TM.TXN = TXN; TM.TNOTE = TNOTE; TM.TT = TT; TM.TSUM = TSUM; TM.TVSEG = TVSEG; TM.TSB = TSB; TM.ROWS_A = ROWS_A; TM.TDHEAD = TDHEAD; TM.RHEAD = RHEAD;
+  TM.TRAV = TRAV; TM.FL = FL; TM.PAYC = PAYC; TM.FSEC = FSEC; TM.TASK = TASK; TM.INSTR = INSTR; TM.BROW = BROW; TM.TFORM = TFORM; TM.MSEL = MSEL; TM.RFORM = RFORM; TM.PSROW = PSROW; TM.PAYROW = PAYROW; TM.TXN = TXN; TM.TNOTE = TNOTE; TM.TT = TT; TM.TSUM = TSUM; TM.TVSEG = TVSEG; TM.TSB = TSB; TM.ROWS_A = ROWS_A; TM.TDHEAD = TDHEAD; TM.RHEAD = RHEAD; TM.PAYSUB = PAYSUB; TM.PSEG = PSEG; TM.PCOST = PCOST; TM.QB = QB; TM.BILL = BILL;
 })();

@@ -8,9 +8,13 @@ Clickable prototype of the Tenant Admin mobile app's Trip module.
 3. Open `https://<user>.github.io/<repo>/`.
 
 ## Files
-- `index.html` — the app canvas
-- `support.js` — component runtime
-- `screens/00-core.js` — shared helpers and sample data
-- `screens/NN-*.js` — one file per module, loaded in number order (each only depends on earlier files)
-- `design-system/` — Voyita Design System tokens, fonts and component bundle
-- `assets/` — images
+| Path | What |
+| --- | --- |
+| `index.html` | The app canvas (opens directly) |
+| `support.js` | Component runtime |
+| `screens/00-core.js` | Shared helpers and sample data |
+| `screens/NN-*.js` | One file per module, loaded in number order |
+| `design-system/` | Voyita Design System tokens, fonts and component bundle |
+| `assets/` | Images |
+
+Each module file only depends on the files numbered before it. To change a module, edit its file only.
